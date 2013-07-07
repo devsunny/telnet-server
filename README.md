@@ -1,2 +1,5 @@
 telnet-server
 =============
+
+MIT LICENSE
+===========
