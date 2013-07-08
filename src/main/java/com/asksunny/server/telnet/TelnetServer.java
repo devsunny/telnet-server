@@ -1,4 +1,11 @@
 package com.asksunny.server.telnet;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+
+import com.asksunny.cli.utils.CLIOptionAnnotationBasedBinder;
+import com.asksunny.server.ServerConfig;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -10,10 +17,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public class TelnetServer {
 
-    private final int port;
+    private final ServerConfig config;
 
-    public TelnetServer(int port) {
-        this.port = port;
+    public TelnetServer(ServerConfig config) {
+        this.config = config;
     }
 
     public void run() throws Exception {
@@ -31,8 +38,11 @@ public class TelnetServer {
 		            workerGroup.shutdownGracefully();					
 				}
 			}));            
-            
-            b.bind(port).sync().channel().closeFuture().sync();      
+            if(config.getBindingAddress()==null || config.getBindingAddress().isEmpty()){
+            	b.bind(config.getPort()).sync().channel().closeFuture().sync();      
+            }else{
+            	b.bind(config.getBindingAddress(), config.getPort()).sync().channel().closeFuture().sync();  
+            }
             
         } finally {
             bossGroup.shutdownGracefully();
@@ -42,14 +52,24 @@ public class TelnetServer {
 
     public static void main(String[] args) throws Exception {
        
+    	ServerConfig config = new ServerConfig();
+    	Options options = CLIOptionAnnotationBasedBinder.getOptions(config);    	
+    	CommandLine cli = CLIOptionAnnotationBasedBinder.bindPosix(options, args, config);
     	
+    	if(config.getPort()==0){
+    		HelpFormatter formatter = new HelpFormatter();
+    		formatter.printHelp("TelnetServer", options);
+    		System.exit(1);
+    	}
+    	    	
+    	new TelnetServer(config).run();
     	
-    	int port;        
-    	if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        } else {
-            port = 8080;
-        }
-        new TelnetServer(port).run();
+//    	int port;        
+//    	if (args.length > 0) {
+//            port = Integer.parseInt(args[0]);
+//        } else {
+//            port = 8080;
+//        }
+//        
     }
 }
