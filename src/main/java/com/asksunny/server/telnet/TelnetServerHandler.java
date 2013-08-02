@@ -67,6 +67,7 @@ public class TelnetServerHandler extends SimpleChannelInboundHandler<String> {
 						ctx.close();			        	
 					}
 					Runtime.getRuntime().exit(0);	
+					return;
 				}
 				ProcessBuilder builder = null;				
 				if(TelnetServer.isWIndows){
